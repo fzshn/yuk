@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimasi Pertunjukan Seni - Simulasi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            background: #ff3742;
+            transform: scale(1.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 40px;
+            text-align: center;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .instruction {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .instruction h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .instruction p {
+            color: #34495e;
+            line-height: 1.6;
+            font-size: 1.1em;
+        }
+        
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+        
+        .pertunjukan-list, .jadwal-area {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            min-height: 500px;
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+        }
+        
+        .pertunjukan-item {
+            background: white;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: grab;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .pertunjukan-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .pertunjukan-item:active {
+            cursor: grabbing;
+        }
+        
+        .pertunjukan-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+        
+        .pertunjukan-item .icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+        
+        .pertunjukan-item .title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        
+        .pertunjukan-item .time {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .jadwal-drop-zone {
+            background: white;
+            border: 2px dashed #bdc3c7;
+            border-radius: 15px;
+            min-height: 500px;
+            padding: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .jadwal-drop-zone.drag-over {
+            border-color: #2ecc71;
+            background: #d5f4e6;
+            transform: scale(1.01);
+        }
+        
+        .jadwal-drop-zone .placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #95a5a6;
+            font-style: italic;
+            font-size: 1.2em;
+            text-align: center;
+            pointer-events: none;
+        }
+        
+        .jadwal-drop-zone.has-items .placeholder {
+            display: none;
+        }
+        
+        .jadwal-item {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border: 1px solid #2ecc71;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .jadwal-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .jadwal-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .jadwal-item .remove-btn:hover {
+            background: #c0392b;
+        }
+        
+        .controls {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .btn.reset {
+            background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .result.correct {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: #2c3e50;
+        }
+        
+        .result.incorrect {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            color: white;
+        }
+        
+        .conflict-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        .bounce {
+            animation: bounce 0.6s;
+        }
+        
+        @media (max-width: 768px) {
+            .game-area {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="close-btn" title="Tutup Aplikasi">×</a>
+
+        <div class="header">
+            <h1>🎭 Optimasi Jadwal Seni Pertunjukan 🎭</h1>
+        </div>
+        
+        <div class="content">
+
+            
+            <div class="game-area">
+                <div class="pertunjukan-list">
+                    <h3 class="section-title">🎪 Daftar Pertunjukan</h3>
+                    <div id="pertunjukan-container">
+                        <!-- Pertunjukan items akan diisi dengan JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="jadwal-area">
+                    <h3 class="section-title">📅 Jadwal Terpilih</h3>
+                    <div id="jadwal-container" class="jadwal-drop-zone">
+                        <div class="placeholder">Seret pertunjukan ke sini</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn" onclick="checkAnswer()">✅ Periksa Jawaban</button>
+                <button class="btn reset" onclick="resetGame()">🔄 Reset</button>
+            </div>
+            
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Data pertunjukan dengan beberapa yang tumpang tindih
+        const pertunjukanData = [
+            {id: 1, title: "Tari Kecak", icon: "💃", start: "08:00", end: "09:30"},
+            {id: 2, title: "Wayang Kulit", icon: "🎭", start: "09:15", end: "10:45"}, // Tumpang tindih dengan Tari Kecak
+            {id: 3, title: "Musik Gamelan", icon: "🎵", start: "10:00", end: "11:30"}, // Tumpang tindih dengan Wayang Kulit
+            {id: 4, title: "Drama Musical", icon: "🎪", start: "11:00", end: "12:30"}, // Tumpang tindih dengan Musik Gamelan
+            {id: 5, title: "Tari Saman", icon: "🕺", start: "12:00", end: "13:30"}, // Tumpang tindih dengan Drama Musical
+            {id: 6, title: "Pantomim", icon: "🤐", start: "13:00", end: "14:30"}, // Tumpang tindih dengan Tari Saman
+            {id: 7, title: "Stand Up Comedy", icon: "😂", start: "14:00", end: "15:30"}, // Tumpang tindih dengan Pantomim
+            {id: 8, title: "Orkestra", icon: "🎼", start: "15:00", end: "16:30"}, // Tumpang tindih dengan Stand Up Comedy
+            {id: 9, title: "Tari Tradisional", icon: "👘", start: "16:00", end: "17:30"}, // Tumpang tindih dengan Orkestra
+            {id: 10, title: "Teater Modern", icon: "🎯", start: "17:00", end: "18:30"}, // Tumpang tindih dengan Tari Tradisional
+            {id: 11, title: "Musik Jazz", icon: "🎷", start: "18:00", end: "19:30"}, // Tumpang tindih dengan Teater Modern
+            {id: 12, title: "Opera", icon: "🎤", start: "19:00", end: "20:30"} // Tumpang tindih dengan Musik Jazz
+        ];
+        
+        let selectedPertunjukan = [];
+        let draggedElement = null;
+        
+        // Shuffle array untuk randomisasi
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+        
+        // Konversi waktu ke menit untuk perbandingan
+        function timeToMinutes(time) {
+            const [hours, minutes] = time.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+        
+        // Cek apakah dua pertunjukan tumpang tindih
+        function hasTimeConflict(p1, p2) {
+            const start1 = timeToMinutes(p1.start);
+            const end1 = timeToMinutes(p1.end);
+            const start2 = timeToMinutes(p2.start);
+            const end2 = timeToMinutes(p2.end);
+            
+            return !(end1 <= start2 || end2 <= start1);
+        }
+        
+        // Inisialisasi game
+        function initGame() {
+            const shuffledPertunjukan = shuffleArray(pertunjukanData);
+            const pertunjukanContainer = document.getElementById('pertunjukan-container');
+            const jadwalContainer = document.getElementById('jadwal-container');
+            
+            // Buat elemen pertunjukan
+            pertunjukanContainer.innerHTML = '';
+            shuffledPertunjukan.forEach(pertunjukan => {
+                const element = document.createElement('div');
+                element.className = 'pertunjukan-item';
+                element.draggable = true;
+                element.dataset.id = pertunjukan.id;
+                element.innerHTML = `
+                    <div class="icon">${pertunjukan.icon}</div>
+                    <div class="title">${pertunjukan.title}</div>
+                    <div class="time">Mulai: ${pertunjukan.start} - Selesai: ${pertunjukan.end}</div>
+                `;
+                
+                // Event listeners untuk drag and drop
+                element.addEventListener('dragstart', handleDragStart);
+                element.addEventListener('dragend', handleDragEnd);
+                
+                pertunjukanContainer.appendChild(element);
+            });
+            
+            // Setup drop zone
+            jadwalContainer.className = 'jadwal-drop-zone';
+            jadwalContainer.innerHTML = '<div class="placeholder">Seret pertunjukan ke sini</div>';
+            
+            // Event listeners untuk drop zone
+            jadwalContainer.addEventListener('dragover', handleDragOver);
+            jadwalContainer.addEventListener('drop', handleDrop);
+            jadwalContainer.addEventListener('dragleave', handleDragLeave);
+            
+            selectedPertunjukan = [];
+            document.getElementById('result').innerHTML = '';
+        }
+        
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+        }
+        
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            draggedElement = null;
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            const jadwalContainer = document.getElementById('jadwal-container');
+            jadwalContainer.classList.add('drag-over');
+        }
+        
+        function handleDragLeave(e) {
+            const jadwalContainer = document.getElementById('jadwal-container');
+            if (!jadwalContainer.contains(e.relatedTarget)) {
+                jadwalContainer.classList.remove('drag-over');
+            }
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            const jadwalContainer = document.getElementById('jadwal-container');
+            jadwalContainer.classList.remove('drag-over');
+            
+            if (!draggedElement) return;
+            
+            const pertunjukanId = parseInt(draggedElement.dataset.id);
+            const pertunjukan = pertunjukanData.find(p => p.id === pertunjukanId);
+            
+            // Tambahkan ke array selected
+            selectedPertunjukan.push(pertunjukan);
+            
+            // Buat elemen jadwal item
+            const jadwalItem = document.createElement('div');
+            jadwalItem.className = 'jadwal-item';
+            jadwalItem.dataset.id = pertunjukan.id;
+            jadwalItem.innerHTML = `
+                <div class="icon">${pertunjukan.icon}</div>
+                <div>
+                    <div class="title">${pertunjukan.title}</div>
+                    <div class="time">${pertunjukan.start} - ${pertunjukan.end}</div>
+                </div>
+                <button class="remove-btn" onclick="removeFromSchedule(${pertunjukan.id})">&times;</button>
+            `;
+            
+            jadwalContainer.appendChild(jadwalItem);
+            jadwalContainer.classList.add('has-items');
+            
+            // Hapus elemen dari daftar
+            draggedElement.remove();
+            
+            // Cek konflik waktu
+            checkAllTimeConflicts();
+        }
+        
+        function createPertunjukanElement(pertunjukan) {
+            const element = document.createElement('div');
+            element.className = 'pertunjukan-item';
+            element.draggable = true;
+            element.dataset.id = pertunjukan.id;
+            element.innerHTML = `
+                <div class="icon">${pertunjukan.icon}</div>
+                <div class="title">${pertunjukan.title}</div>
+                <div class="time">Mulai: ${pertunjukan.start} - Selesai: ${pertunjukan.end}</div>
+            `;
+            
+            element.addEventListener('dragstart', handleDragStart);
+            element.addEventListener('dragend', handleDragEnd);
+            
+            return element;
+        }
+        
+        function removeFromSchedule(pertunjukanId) {
+            const pertunjukan = pertunjukanData.find(p => p.id === pertunjukanId);
+            const jadwalContainer = document.getElementById('jadwal-container');
+            
+            // Hapus dari array selected
+            selectedPertunjukan = selectedPertunjukan.filter(p => p.id !== pertunjukanId);
+            
+            // Hapus elemen dari jadwal
+            const jadwalItem = jadwalContainer.querySelector(`[data-id="${pertunjukanId}"]`);
+            if (jadwalItem) {
+                jadwalItem.remove();
+            }
+            
+            // Update class has-items
+            if (selectedPertunjukan.length === 0) {
+                jadwalContainer.classList.remove('has-items');
+            }
+            
+            // Kembalikan ke daftar pertunjukan
+            const pertunjukanElement = createPertunjukanElement(pertunjukan);
+            document.getElementById('pertunjukan-container').appendChild(pertunjukanElement);
+            
+            // Cek konflik waktu lagi
+            checkAllTimeConflicts();
+        }
+        
+        function checkAllTimeConflicts() {
+            // Hapus warning lama
+            document.querySelectorAll('.conflict-warning').forEach(w => w.remove());
+            
+            const jadwalItems = document.querySelectorAll('.jadwal-item');
+            
+            selectedPertunjukan.forEach((pertunjukan1, index1) => {
+                selectedPertunjukan.forEach((pertunjukan2, index2) => {
+                    if (index1 !== index2 && hasTimeConflict(pertunjukan1, pertunjukan2)) {
+                        // Tambahkan warning ke item yang konflik
+                        [index1, index2].forEach(idx => {
+                            if (jadwalItems[idx] && !jadwalItems[idx].querySelector('.conflict-warning')) {
+                                const warning = document.createElement('div');
+                                warning.className = 'conflict-warning';
+                                warning.textContent = '⚠️ Jadwal bertabrakan!';
+                                warning.style.marginTop = '5px';
+                                warning.style.fontSize = '0.8em';
+                                jadwalItems[idx].appendChild(warning);
+                            }
+                        });
+                    }
+                });
+            });
+        }
+        
+        function checkAnswer() {
+            if (selectedPertunjukan.length !== 6) {
+                showResult('Anda perlu memilih tepat 6 pertunjukan!', 'incorrect');
+                return;
+            }
+            
+            // Cek apakah ada konflik waktu
+            let hasConflict = false;
+            for (let i = 0; i < selectedPertunjukan.length; i++) {
+                for (let j = i + 1; j < selectedPertunjukan.length; j++) {
+                    if (hasTimeConflict(selectedPertunjukan[i], selectedPertunjukan[j])) {
+                        hasConflict = true;
+                        break;
+                    }
+                }
+                if (hasConflict) break;
+            }
+            
+            if (hasConflict) {
+                showResult('❌ Masih ada jadwal yang bertabrakan! Coba lagi.', 'incorrect');
+            } else {
+                showResult('🎉 Selamat! Anda berhasil membuat jadwal optimal tanpa tabrakan waktu!', 'correct');
+                // Tambahkan efek bounce
+                document.querySelectorAll('.jadwal-item').forEach(item => {
+                    item.classList.add('bounce');
+                    setTimeout(() => item.classList.remove('bounce'), 600);
+                });
+            }
+        }
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message;
+            resultDiv.className = `result ${type}`;
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function resetGame() {
+            initGame();
+        }
+        
+        // Inisialisasi game saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', initGame);
+        
+        // Prevent default drag behavior untuk gambar dan teks
+        document.addEventListener('dragstart', function(e) {
+            if (e.target.tagName === 'IMG' || e.target.tagName === 'A') {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
