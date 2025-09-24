@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimasi Muatan Truk</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+        }
+
+        .close-btn:hover {
+            background: #ff3838;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(45deg, #3498db, #9b59b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .description {
+            text-align: center;
+            color: #555;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            line-height: 1.6;
+            padding: 0 20px;
+        }
+
+        .truck-container {
+            background: linear-gradient(145deg, #f0f2f5, #e1e8ed);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .truck-scene {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            margin-bottom: 40px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .road {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 50px;
+            background: #2c3e50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .road-line {
+            width: 60px;
+            height: 4px;
+            background: white;
+            margin: 0 10px;
+            border-radius: 2px;
+            animation: roadMove 1s linear infinite;
+        }
+
+        @keyframes roadMove {
+            0% { transform: translateX(-100px); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(100px); opacity: 0; }
+        }
+
+        .truck {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 2s ease-in-out;
+        }
+
+        .truck.moving {
+            transform: translateX(200%);
+        }
+
+        .truck-body {
+            background: linear-gradient(145deg, #bdc3c7, #95a5a6);
+            border: 3px solid #7f8c8d;
+            border-radius: 10px;
+            width: 300px;
+            height: 120px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .cargo-area {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            flex: 1;
+            height: 100%;
+        }
+
+        .box-slot {
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px dashed #7f8c8d;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7f8c8d;
+            font-weight: bold;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+            min-height: 90px;
+            position: relative;
+        }
+
+        .box-slot.drag-over {
+            background: rgba(52, 152, 219, 0.3);
+            border-color: #3498db;
+            border-style: solid;
+            transform: scale(1.05);
+        }
+
+        .box-slot.filled {
+            background: linear-gradient(145deg, #3498db, #2980b9);
+            border: 2px solid #2980b9;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .truck-cab {
+            background: linear-gradient(145deg, #34495e, #2c3e50);
+            width: 60px;
+            height: 80px;
+            margin-left: 8px;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .wheel {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #2c3e50, #34495e);
+            border-radius: 50%;
+            position: absolute;
+            bottom: -20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .wheel.front {
+            right: 8px;
+        }
+
+        .wheel.back {
+            left: 50px;
+        }
+
+        .truck.moving .wheel {
+            animation: wheelRotate 0.5s linear infinite;
+        }
+
+        @keyframes wheelRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-check {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-check:hover {
+            background: linear-gradient(45deg, #2980b9, #1f5f8b);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-restart {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .btn-restart:hover {
+            background: linear-gradient(45deg, #c0392b, #a93226);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+        }
+
+        .stats-title {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            padding: 20px 15px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.6em;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: grab;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            user-select: none;
+        }
+
+        .stat-card:active {
+            cursor: grabbing;
+        }
+
+        .stat-card.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg) scale(1.1);
+            z-index: 1000;
+        }
+
+        .stat-card.used {
+            opacity: 0.3;
+            pointer-events: none;
+            transform: scale(0.9);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover:not(.used) {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-1 { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
+        .stat-2 { background: linear-gradient(135deg, #ff9f43, #feca57); }
+        .stat-3 { background: linear-gradient(135deg, #48dbfb, #0abde3); }
+        .stat-4 { background: linear-gradient(135deg, #1dd1a1, #10ac84); }
+        .stat-5 { background: linear-gradient(135deg, #a55eea, #8854d0); }
+        .stat-6 { background: linear-gradient(135deg, #fd79a8, #e84393); }
+        .stat-7 { background: linear-gradient(135deg, #fdcb6e, #e17055); }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            box-shadow: 0 6px 20px rgba(116, 185, 255, 0.3);
+        }
+
+        .status.correct {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.3);
+            animation: successPulse 0.5s ease-in-out;
+        }
+
+        .status.incorrect {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+            animation: errorShake 0.5s ease-in-out;
+        }
+
+        @keyframes successPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #f39c12;
+            animation: confetti-fall 3s linear infinite;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .truck-body {
+                width: 250px;
+                height: 100px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="close-btn" title="Tutup Aplikasi">×</a>
+
+        
+        <h1>🚛 Optimasi Muatan Truk</h1>
+        
+        <p class="description">
+            Pak Budi sedang panen sayuran dan hendak membawa sayuran tersebut ke pasar untuk dijual. 
+            Namun karena mobil box yang dimiliki pak Budi hanya dapat menampung 3 box, maka bantu pak Budi 
+            untuk menentukan box mana saja yang harus dibawa agar total bobot sayuran yang dibawa oleh mobil maksimal!
+        </p>
+
+        <div class="truck-container">
+            <div class="truck-scene">
+                <div class="road">
+                    <div class="road-line"></div>
+                    <div class="road-line"></div>
+                    <div class="road-line"></div>
+                    <div class="road-line"></div>
+                    <div class="road-line"></div>
+                </div>
+                
+                <div class="truck" id="truck">
+                    <div class="truck-body">
+                        <div class="cargo-area">
+                            <div class="box-slot" data-slot="0">Slot 1</div>
+                            <div class="box-slot" data-slot="1">Slot 2</div>
+                            <div class="box-slot" data-slot="2">Slot 3</div>
+                        </div>
+                        <div class="truck-cab"></div>
+                        <div class="wheel front"></div>
+                        <div class="wheel back"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-check" onclick="checkOptimization()">
+                    🔍 Periksa
+                </button>
+                <button class="btn btn-restart" onclick="restartSimulation()">
+                    🔄 Mulai Ulang
+                </button>
+            </div>
+
+
+            <div class="stats" id="statsContainer">
+                <!-- Cards will be generated by JavaScript -->
+            </div>
+
+            <div class="status" id="statusDisplay" style="display: none;">
+            </div>
+        </div>
+    </div>
+
+    <div class="celebration" id="celebration"></div>
+
+    <script>
+        let selectedBoxes = [];
+        let draggedElement = null;
+        let currentProblem = {};
+        let problemSets = [
+            { values: [278, 251, 170, 205, 252, 195, 535], optimal: [535, 278, 252] },
+            { values: [340, 120, 280, 190, 450, 380, 210], optimal: [450, 380, 340] },
+            { values: [155, 320, 275, 180, 410, 235, 390], optimal: [410, 390, 320] },
+            { values: [220, 360, 180, 290, 330, 240, 480], optimal: [480, 360, 330] },
+            { values: [190, 285, 320, 150, 375, 260, 420], optimal: [420, 375, 320] },
+            { values: [310, 180, 240, 380, 220, 350, 290], optimal: [380, 350, 310] },
+            { values: [160, 430, 250, 370, 200, 320, 280], optimal: [430, 370, 320] },
+            { values: [270, 190, 340, 230, 410, 300, 380], optimal: [410, 380, 340] },
+            { values: [125, 365, 210, 290, 450, 180, 340], optimal: [450, 365, 340] },
+            { values: [310, 240, 380, 170, 330, 280, 420], optimal: [420, 380, 330] }
+        ];
+
+        // Initialize game with random problem
+        function initializeGame() {
+            // Get random problem set
+            const randomIndex = Math.floor(Math.random() * problemSets.length);
+            currentProblem = problemSets[randomIndex];
+            
+            // Update display
+            updateProblemDisplay();
+            
+            // Reset game state
+            selectedBoxes = [];
+            
+            // Reset all slots
+            const slots = document.querySelectorAll('.box-slot');
+            slots.forEach(slot => {
+                slot.classList.remove('filled');
+                slot.textContent = `Slot ${parseInt(slot.getAttribute('data-slot')) + 1}`;
+                slot.removeAttribute('data-value');
+                slot.removeAttribute('data-id');
+            });
+
+            // Reset truck position
+            document.getElementById('truck').classList.remove('moving');
+
+            // Hide status
+            document.getElementById('statusDisplay').style.display = 'none';
+            
+            // Clear confetti
+            document.getElementById('celebration').innerHTML = '';
+
+            // Re-initialize drag and drop
+            initializeDragAndDrop();
+        }
+
+        function updateProblemDisplay() {
+            const statsContainer = document.getElementById('statsContainer');
+            const colors = ['stat-1', 'stat-2', 'stat-3', 'stat-4', 'stat-5', 'stat-6', 'stat-7'];
+            
+            statsContainer.innerHTML = '';
+            
+            currentProblem.values.forEach((value, index) => {
+                const card = document.createElement('div');
+                card.className = `stat-card ${colors[index]}`;
+                card.setAttribute('draggable', 'true');
+                card.setAttribute('data-value', value);
+                card.setAttribute('data-id', `stat${index + 1}`);
+                card.textContent = value;
+                statsContainer.appendChild(card);
+            });
+        }
+
+        // Drag and Drop functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeGame();
+        });
+
+        function initializeDragAndDrop() {
+            const draggables = document.querySelectorAll('.stat-card[draggable="true"]');
+            const dropZones = document.querySelectorAll('.box-slot');
+
+            draggables.forEach(draggable => {
+                draggable.addEventListener('dragstart', handleDragStart);
+                draggable.addEventListener('dragend', handleDragEnd);
+            });
+
+            dropZones.forEach(dropZone => {
+                dropZone.addEventListener('dragover', handleDragOver);
+                dropZone.addEventListener('dragenter', handleDragEnter);
+                dropZone.addEventListener('dragleave', handleDragLeave);
+                dropZone.addEventListener('drop', handleDrop);
+            });
+        }
+
+        function handleDragStart(e) {
+            if (this.classList.contains('used')) {
+                e.preventDefault();
+                return;
+            }
+            
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+            e.dataTransfer.setData('text/plain', this.getAttribute('data-value'));
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            if (!this.classList.contains('filled')) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            this.classList.remove('drag-over');
+
+            if (this.classList.contains('filled') || !draggedElement) {
+                return false;
+            }
+
+            // Tambahkan nilai ke slot
+            const value = draggedElement.getAttribute('data-value');
+            const id = draggedElement.getAttribute('data-id');
+            
+            this.classList.add('filled');
+            this.textContent = value;
+            this.setAttribute('data-value', value);
+            this.setAttribute('data-id', id);
+
+            // Tandai card sebagai sudah digunakan
+            draggedElement.classList.add('used');
+            draggedElement.setAttribute('draggable', 'false');
+
+            // Tambahkan ke array selectedBoxes
+            selectedBoxes.push({
+                value: parseInt(value),
+                id: id,
+                slot: this.getAttribute('data-slot')
+            });
+
+            updateStatus();
+
+            return false;
+        }
+
+        function updateStatus() {
+            const statusDisplay = document.getElementById('statusDisplay');
+            
+            if (selectedBoxes.length === 0) {
+                statusDisplay.style.display = 'none';
+            } else if (selectedBoxes.length < 3) {
+                statusDisplay.textContent = `📦 ${selectedBoxes.length}/3 kotak dipilih. Pilih ${3 - selectedBoxes.length} kotak lagi`;
+                statusDisplay.className = 'status';
+                statusDisplay.style.display = 'block';
+            } else {
+                statusDisplay.textContent = '✅ 3 kotak sudah dipilih! Klik "Periksa" untuk melihat hasilnya';
+                statusDisplay.className = 'status';
+                statusDisplay.style.display = 'block';
+            }
+        }
+
+        function checkOptimization() {
+            if (selectedBoxes.length !== 3) {
+                const statusDisplay = document.getElementById('statusDisplay');
+                statusDisplay.textContent = '❌ Pilih tepat 3 kotak terlebih dahulu!';
+                statusDisplay.className = 'status incorrect';
+                statusDisplay.style.display = 'block';
+                return;
+            }
+
+            const selectedValues = selectedBoxes.map(box => box.value).sort((a, b) => b - a);
+            const currentTotal = selectedValues.reduce((a, b) => a + b, 0);
+            const optimalTotal = currentProblem.optimal.reduce((a, b) => a + b, 0);
+            
+            // Cek apakah pilihan sudah optimal
+            const isOptimal = selectedValues.length === 3 && 
+                             selectedValues.every(val => currentProblem.optimal.includes(val)) &&
+                             currentTotal === optimalTotal;
+
+            const statusDisplay = document.getElementById('statusDisplay');
+
+            if (isOptimal) {
+                statusDisplay.innerHTML = `🎉 BENAR! Total Optimal: ${currentTotal} kg - Truk siap berangkat!`;
+                statusDisplay.className = 'status correct';
+                statusDisplay.style.display = 'block';
+                
+                // Animasi truk bergerak
+                setTimeout(() => {
+                    document.getElementById('truck').classList.add('moving');
+                    createConfetti();
+                }, 1000);
+                
+                // Tidak auto generate soal baru, tunggu user klik "Mulai Ulang"
+                
+            } else {
+                statusDisplay.innerHTML = `❌ Belum optimal! Total saat ini: ${currentTotal} kg. Total optimal adalah: ${optimalTotal} kg`;
+                statusDisplay.className = 'status incorrect';
+                statusDisplay.style.display = 'block';
+            }
+        }
+
+        function createConfetti() {
+            const celebration = document.getElementById('celebration');
+            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#ffa726', '#ab47bc', '#26a69a'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 3 + 's';
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                celebration.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+
+        function restartSimulation() {
+            initializeGame();
+        }
+
+        function closeApp() {
+            if (confirm('Apakah Anda yakin ingin menutup simulasi?')) {
+                document.body.innerHTML = `
+                    <div style="
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        min-height: 100vh; 
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                        color: white; 
+                        font-family: 'Segoe UI', sans-serif;
+                        text-align: center;
+                    ">
+                        <div>
+                            <h1 style="font-size: 3em; margin-bottom: 20px;">👋</h1>
+                            <h2>Terima Kasih!</h2>
+                            <p style="margin-top: 20px; font-size: 1.2em;">
+                                Simulasi Optimasi Muatan Truk telah ditutup.
+                            </p>
+                            <button onclick="location.reload()" style="
+                                margin-top: 30px;
+                                padding: 12px 30px;
+                                background: linear-gradient(45deg, #3498db, #2980b9);
+                                color: white;
+                                border: none;
+                                border-radius: 25px;
+                                font-size: 1.1em;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                            ">
+                                🔄 Buka Lagi
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
