@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Kunci Digital</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(145deg, #ff6b7a, #ff4757);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: linear-gradient(145deg, #ff7b8a, #ff5767);
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
+        }
+
+        .close-btn:active {
+            transform: scale(0.95);
+            
+        }
+
+        .lock-container {
+            background: linear-gradient(145deg, #2a2a3e, #1e1e32);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            position: relative;
+        }
+
+        .lock-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .lock-icon.locked {
+            color: #ff4757;
+        }
+
+        .lock-icon.unlocked {
+            color: #2ed573;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            color: #e1e1e1;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .display {
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            font-size: 32px;
+            font-family: 'Courier New', monospace;
+            color: #00ff41;
+            letter-spacing: 8px;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .key {
+            background: linear-gradient(145deg, #3a3a4e, #2e2e42);
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 
+                0 5px 15px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .key:hover {
+            background: linear-gradient(145deg, #4a4a5e, #3e3e52);
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .key:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .clear-btn {
+            background: linear-gradient(145deg, #ff6b7a, #ff4757);
+            grid-column: span 3;
+            margin-top: 10px;
+        }
+
+        .clear-btn:hover {
+            background: linear-gradient(145deg, #ff7b8a, #ff5767);
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 500;
+            min-height: 25px;
+        }
+
+        .error {
+            color: #ff4757;
+        }
+
+        .success {
+            color: #2ed573;
+        }
+
+        .attempts {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #a0a0a0;
+        }
+
+        /* Animasi getar */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* Animasi unlock */
+        @keyframes unlock {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .unlock-animation {
+            animation: unlock 0.6s ease-in-out;
+        }
+
+        /* Efek berkedip untuk display */
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .blink {
+            animation: blink 0.1s ease-in-out 3;
+        }
+    </style>
+</head>
+<body>
+            <div class="lock-container">
+        <a href="index.html" class="close-btn" id="closeBtn" style="display: none;">✕</a>
+        <div class="lock-icon locked" id="lockIcon">🔒</div>
+        <h1>Kunci Digital</h1>
+        
+        <div class="display" id="display">_ _ _</div>
+        
+        <div class="keypad">
+            <button class="key" onclick="inputDigit(1)">1</button>
+            <button class="key" onclick="inputDigit(2)">2</button>
+            <button class="key" onclick="inputDigit(3)">3</button>
+            <button class="key" onclick="inputDigit(4)">4</button>
+            <button class="key" onclick="inputDigit(5)">5</button>
+            <button class="key" onclick="inputDigit(6)">6</button>
+            <button class="key" onclick="inputDigit(7)">7</button>
+            <button class="key" onclick="inputDigit(8)">8</button>
+            <button class="key" onclick="inputDigit(9)">9</button>
+            <button class="key" onclick="inputDigit(0)" style="grid-column: span 3;">0</button>
+            <button class="key clear-btn" onclick="clearCode()">CLEAR</button>
+        </div>
+        
+        <div class="status" id="status">Masukkan kode 3 digit</div>
+        <div class="attempts" id="attempts">Percobaan: <span id="attemptCount">0</span></div>
+    </div>
+
+    <script>
+        const correctCode = "335";
+        let currentCode = "";
+        let attempts = 0;
+        let isLocked = true;
+
+        const display = document.getElementById('display');
+        const status = document.getElementById('status');
+        const lockIcon = document.getElementById('lockIcon');
+        const attemptCount = document.getElementById('attemptCount');
+        const container = document.querySelector('.lock-container');
+
+        function updateDisplay() {
+            let displayText = "";
+            for (let i = 0; i < 3; i++) {
+                if (i < currentCode.length) {
+                    displayText += currentCode[i] + " ";
+                } else {
+                    displayText += "_ ";
+                }
+            }
+            display.textContent = displayText.trim();
+        }
+
+        function inputDigit(digit) {
+            if (!isLocked) return;
+            
+            if (currentCode.length < 3) {
+                currentCode += digit.toString();
+                updateDisplay();
+                
+                // Cek apakah sudah 3 digit
+                if (currentCode.length === 3) {
+                    setTimeout(() => checkCode(), 300);
+                }
+            }
+        }
+
+        function checkCode() {
+            attempts++;
+            attemptCount.textContent = attempts;
+            
+            if (currentCode === correctCode) {
+                // Kode benar - buka kunci
+                status.textContent = "KUNCI TERBUKA!";
+                status.className = "status success";
+                
+                lockIcon.textContent = "🔓";
+                lockIcon.className = "lock-icon unlocked unlock-animation";
+                
+                isLocked = false;
+                
+                // Tampilkan tombol close
+                setTimeout(() => {
+                    document.getElementById('closeBtn').style.display = 'flex';
+                }, 500);
+                
+                // Efek berkedip pada display
+                display.classList.add('blink');
+                setTimeout(() => {
+                    display.classList.remove('blink');
+                }, 300);
+                
+            } else {
+                // Kode salah - getar dan reset
+                status.textContent = "KODE SALAH!";
+                status.className = "status error";
+                
+                // Animasi getar
+                container.classList.add('shake');
+                display.classList.add('blink');
+                
+                // Hapus kode setelah animasi
+                setTimeout(() => {
+                    currentCode = "";
+                    updateDisplay();
+                    status.textContent = "Masukkan kode 3 digit";
+                    status.className = "status";
+                    container.classList.remove('shake');
+                    display.classList.remove('blink');
+                }, 1000);
+            }
+        }
+
+        function clearCode() {
+            if (isLocked) {
+                currentCode = "";
+                updateDisplay();
+                status.textContent = "Masukkan kode 3 digit";
+                status.className = "status";
+            } else {
+                // Reset seluruh sistem
+                currentCode = "";
+                attempts = 0;
+                isLocked = true;
+                updateDisplay();
+                status.textContent = "Masukkan kode 3 digit";
+                status.className = "status";
+                lockIcon.textContent = "🔒";
+                lockIcon.className = "lock-icon locked";
+                attemptCount.textContent = "0";
+                document.getElementById('closeBtn').style.display = 'none';
+            }
+        }
+
+        function nextPage() {
+            // Animasi fade out
+            container.style.transition = 'all 0.5s ease';
+            container.style.opacity = '0';
+            container.style.transform = 'scale(0.8)';
+            
+            setTimeout(() => {
+                // Ganti ke halaman selanjutnya
+                document.body.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; color: white;">
+                        <div style="font-size: 80px; margin-bottom: 30px;">🎉</div>
+                        <h1 style="font-size: 48px; margin-bottom: 20px; color: #2ed573;">Selamat!</h1>
+                        <p style="font-size: 24px; margin-bottom: 30px;">Anda berhasil membuka kunci digital!</p>
+                        <p style="font-size: 18px; color: #a0a0a0; margin-bottom: 40px;">Kode yang benar adalah: <span style="color: #00ff41; font-family: 'Courier New', monospace; font-size: 22px;">335</span></p>
+                        <button onclick="location.reload()" style="
+                            background: linear-gradient(145deg, #3a3a4e, #2e2e42);
+                            border: none;
+                            border-radius: 15px;
+                            padding: 15px 30px;
+                            font-size: 18px;
+                            color: white;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+                        ">Coba Lagi</button>
+                    </div>
+                `;
+            }, 500);
+        }
+
+        // Inisialisasi display
+        updateDisplay();
+
+        // Keyboard support
+        document.addEventListener('keydown', function(event) {
+            const key = event.key;
+            if (key >= '0' && key <= '9') {
+                inputDigit(parseInt(key));
+            } else if (key === 'Backspace' || key === 'Delete') {
+                clearCode();
+            }
+        });
+    </script>
+</body>
+</html>
