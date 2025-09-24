@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pemburuan Harta Karun - Knapsack Problem</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .game-info {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .level-info {
+            font-size: 1.2em;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .main-content {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .treasures-panel {
+            flex: 1;
+            padding: 20px;
+            background: #fff8e1;
+            border-right: 2px solid #dee2e6;
+        }
+
+        .bag-panel {
+            flex: 1;
+            padding: 20px;
+            background: #e8f5e8;
+        }
+
+        .panel-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .treasures-panel .panel-title {
+            background: #ffecb3;
+            border: 2px solid #ffc107;
+        }
+
+        .bag-panel .panel-title {
+            background: #c8e6c9;
+            border: 2px solid #4caf50;
+        }
+
+        .treasure-item {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: move;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .treasure-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-color: #007bff;
+        }
+
+        .treasure-item.dragging {
+            opacity: 0.7;
+            transform: rotate(5deg);
+        }
+
+        .treasure-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .treasure-name {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .treasure-stats {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+        }
+
+        .bag-area {
+            border: 3px dashed #4caf50;
+            border-radius: 15px;
+            min-height: 300px;
+            padding: 20px;
+            background: #f1f8e9;
+            position: relative;
+        }
+
+        .bag-area.drag-over {
+            border-color: #2196f3;
+            background: #e3f2fd;
+        }
+
+        .bag-stats {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .stat-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .weight-current {
+            color: #ff5722;
+            font-weight: bold;
+        }
+
+        .weight-limit {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .coins-total {
+            color: #ff9800;
+            font-weight: bold;
+        }
+
+        .controls {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .empty-bag {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            margin-top: 50px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .treasures-panel,
+            .bag-panel {
+                border: none;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="close-btn" title="Tutup Aplikasi">×</a>
+            <h1>🏴‍☠️ Pemburuan Harta Karun 🏴‍☠️</h1>
+            <p>Simulasi Knapsack Problem - Drag & Drop Harta Karun</p>
+        </div>
+
+        <div class="game-info">
+            <div class="level-info">Level <span id="currentLevel">1</span> - Target: Bobot Tepat 10 kg</div>
+            <p>Seret harta karun ke dalam tas untuk mencapai bobot tepat 10 kg!</p>
+        </div>
+
+        <div class="main-content">
+            <div class="treasures-panel">
+                <div class="panel-title">🗃️ Daftar Harta Karun</div>
+                <div id="treasuresList">
+                    <!-- Treasure items akan diisi oleh JavaScript -->
+                </div>
+            </div>
+
+            <div class="bag-panel">
+                <div class="panel-title">🎒 Tas Harta Karun</div>
+                
+                <div class="bag-stats">
+                    <div class="stat-row">
+                        <span>Kapasitas Maksimal:</span>
+                        <span class="weight-limit">10 kg</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Berat Saat Ini:</span>
+                        <span class="weight-current"><span id="currentWeight">0</span> kg</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Total Nilai:</span>
+                        <span class="coins-total"><span id="totalCoins">0</span> Koin</span>
+                    </div>
+                </div>
+
+                <div class="bag-area" id="bagArea">
+                    <div class="empty-bag" id="emptyBag">
+                        Seret harta karun ke sini...
+                    </div>
+                    <div id="bagItems"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-check" id="checkBtn">🔍 Cek Solusi</button>
+            <button class="btn btn-reset" id="resetBtn">🔄 Mulai Ulang</button>
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <script>
+        // Data level dengan berbagai kombinasi harta karun (disesuaikan untuk banyak solusi 10kg)
+        const levels = [
+            {
+                level: 1,
+                treasures: [
+                    { id: 'mahkota', name: 'Mahkota Raja', icon: '👑', weight: 3, coins: 14 },
+                    { id: 'piala', name: 'Piala Emas', icon: '🏆', weight: 2, coins: 12 },
+                    { id: 'kantong', name: 'Kantong Koin', icon: '💰', weight: 4, coins: 17 },
+                    { id: 'kalung', name: 'Kalung Permata', icon: '⭐', weight: 1, coins: 8 },
+                    { id: 'cincin', name: 'Cincin Berlian', icon: '💍', weight: 2, coins: 10 },
+                    { id: 'pedang', name: 'Pedang Emas', icon: '⚔️', weight: 3, coins: 15 }
+                ]
+            },
+            {
+                level: 2,
+                treasures: [
+                    { id: 'kristal', name: 'Kristal Ajaib', icon: '💎', weight: 1, coins: 9 },
+                    { id: 'patung', name: 'Patung Emas', icon: '🗿', weight: 3, coins: 16 },
+                    { id: 'kunci', name: 'Kunci Rahasia', icon: '🔑', weight: 2, coins: 11 },
+                    { id: 'peti', name: 'Peti Harta', icon: '📦', weight: 4, coins: 20 },
+                    { id: 'gelang', name: 'Gelang Ruby', icon: '💋', weight: 1, coins: 7 },
+                    { id: 'tongkat', name: 'Tongkat Sihir', icon: '🪄', weight: 2, coins: 13 }
+                ]
+            },
+            {
+                level: 3,
+                treasures: [
+                    { id: 'tiara', name: 'Tiara Ratu', icon: '👸', weight: 1, coins: 8 },
+                    { id: 'vas', name: 'Vas Antik', icon: '🏺', weight: 2, coins: 14 },
+                    { id: 'buku', name: 'Buku Mantra', icon: '📚', weight: 3, coins: 18 },
+                    { id: 'kompas', name: 'Kompas Emas', icon: '🧭', weight: 1, coins: 6 },
+                    { id: 'koin', name: 'Koin Bertuah', icon: '🪙', weight: 2, coins: 12 },
+                    { id: 'cermin', name: 'Cermin Ajaib', icon: '🪞', weight: 4, coins: 22 }
+                ]
+            }
+        ];
+
+        let currentLevel = 1;
+        let currentTreasures = [];
+        let bagItems = [];
+        let gameCompleted = false;
+
+        // Inisialisasi game
+        function initGame() {
+            currentTreasures = [...levels[currentLevel - 1].treasures];
+            bagItems = [];
+            gameCompleted = false;
+            renderTreasures();
+            updateBagStats();
+            clearMessage();
+            document.getElementById('currentLevel').textContent = currentLevel;
+        }
+
+        // Render daftar harta karun
+        function renderTreasures() {
+            const treasuresList = document.getElementById('treasuresList');
+            treasuresList.innerHTML = '';
+
+            currentTreasures.forEach(treasure => {
+                const item = document.createElement('div');
+                item.className = 'treasure-item';
+                item.draggable = true;
+                item.dataset.treasureId = treasure.id;
+                
+                item.innerHTML = `
+                    <div class="treasure-icon">${treasure.icon}</div>
+                    <div class="treasure-name">${treasure.name}</div>
+                    <div class="treasure-stats">
+                        <span>Berat: ${treasure.weight} kg</span>
+                        <span>Nilai: ${treasure.coins} Koin</span>
+                    </div>
+                `;
+
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                treasuresList.appendChild(item);
+            });
+        }
+
+        // Render items di dalam tas
+        function renderBagItems() {
+            const bagItemsContainer = document.getElementById('bagItems');
+            const emptyBag = document.getElementById('emptyBag');
+            
+            if (bagItems.length === 0) {
+                emptyBag.style.display = 'block';
+                bagItemsContainer.innerHTML = '';
+            } else {
+                emptyBag.style.display = 'none';
+                bagItemsContainer.innerHTML = '';
+                
+                bagItems.forEach((treasure, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'treasure-item';
+                    item.style.marginBottom = '10px';
+                    
+                    item.innerHTML = `
+                        <div class="treasure-icon">${treasure.icon}</div>
+                        <div class="treasure-name">${treasure.name}</div>
+                        <div class="treasure-stats">
+                            <span>Berat: ${treasure.weight} kg</span>
+                            <span>Nilai: ${treasure.coins} Koin</span>
+                        </div>
+                    `;
+                    
+                    // Tambahkan event click untuk mengembalikan item
+                    item.addEventListener('click', () => returnToBag(index));
+                    item.style.cursor = 'pointer';
+                    item.title = 'Klik untuk mengembalikan ke daftar';
+                    
+                    bagItemsContainer.appendChild(item);
+                });
+            }
+        }
+
+        // Update statistik tas
+        function updateBagStats() {
+            const currentWeight = bagItems.reduce((sum, item) => sum + item.weight, 0);
+            const totalCoins = bagItems.reduce((sum, item) => sum + item.coins, 0);
+            
+            document.getElementById('currentWeight').textContent = currentWeight;
+            document.getElementById('totalCoins').textContent = totalCoins;
+            
+            // Update warna berdasarkan berat
+            const weightElement = document.querySelector('.weight-current');
+            if (currentWeight > 10) {
+                weightElement.style.color = '#f44336';
+            } else if (currentWeight === 10) {
+                weightElement.style.color = '#4caf50';
+            } else {
+                weightElement.style.color = '#ff5722';
+            }
+            
+            renderBagItems();
+        }
+
+        // Kembalikan item ke daftar
+        function returnToBag(index) {
+            if (gameCompleted) return;
+            
+            const treasure = bagItems.splice(index, 1)[0];
+            currentTreasures.push(treasure);
+            renderTreasures();
+            updateBagStats();
+            clearMessage();
+        }
+
+        // Event handlers untuk drag and drop
+        function handleDragStart(e) {
+            if (gameCompleted) {
+                e.preventDefault();
+                return;
+            }
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.dataset.treasureId);
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        // Setup drag and drop untuk bag area
+        const bagArea = document.getElementById('bagArea');
+        
+        bagArea.addEventListener('dragover', (e) => {
+            if (gameCompleted) return;
+            e.preventDefault();
+            bagArea.classList.add('drag-over');
+        });
+
+        bagArea.addEventListener('dragleave', (e) => {
+            if (e.target === bagArea) {
+                bagArea.classList.remove('drag-over');
+            }
+        });
+
+        bagArea.addEventListener('drop', (e) => {
+            if (gameCompleted) return;
+            e.preventDefault();
+            bagArea.classList.remove('drag-over');
+            
+            const treasureId = e.dataTransfer.getData('text/plain');
+            const treasureIndex = currentTreasures.findIndex(t => t.id === treasureId);
+            
+            if (treasureIndex !== -1) {
+                const treasure = currentTreasures[treasureIndex];
+                const currentWeight = bagItems.reduce((sum, item) => sum + item.weight, 0);
+                
+                // Cek apakah masih bisa menambah item
+                if (currentWeight + treasure.weight <= 15) { // Beri toleransi sedikit
+                    bagItems.push(treasure);
+                    currentTreasures.splice(treasureIndex, 1);
+                    renderTreasures();
+                    updateBagStats();
+                    clearMessage();
+                } else {
+                    showMessage('Tas terlalu berat! Tidak bisa menambah item ini.', 'error');
+                }
+            }
+        });
+
+        // Cek solusi
+        function checkSolution() {
+            const currentWeight = bagItems.reduce((sum, item) => sum + item.weight, 0);
+            const totalCoins = bagItems.reduce((sum, item) => sum + item.coins, 0);
+            
+            if (currentWeight === 10) {
+                gameCompleted = true;
+                showMessage(`🎉 Selamat! Anda berhasil mencapai bobot tepat 10 kg dengan total ${totalCoins} koin!`, 'success');
+                
+                // Nonaktifkan drag and drop
+                document.querySelectorAll('.treasure-item').forEach(item => {
+                    item.draggable = false;
+                    item.style.opacity = '0.7';
+                });
+            } else if (currentWeight < 10) {
+                showMessage(`❌ Bobot kurang! Saat ini ${currentWeight} kg, butuh tepat 10 kg.`, 'error');
+            } else {
+                showMessage(`❌ Bobot berlebih! Saat ini ${currentWeight} kg, maksimal 10 kg.`, 'error');
+            }
+        }
+
+        // Reset game
+        function resetGame() {
+            if (gameCompleted && currentLevel < levels.length) {
+                currentLevel++;
+                initGame();
+                showMessage(`🆙 Naik ke Level ${currentLevel}!`, 'success');
+            } else {
+                initGame();
+                showMessage('🔄 Game direset!', 'success');
+            }
+        }
+
+        // Show message
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+        }
+
+        // Clear message
+        function clearMessage() {
+            const messageDiv = document.getElementById('message');
+            messageDiv.style.display = 'none';
+        }
+
+        // Event listeners
+        document.getElementById('checkBtn').addEventListener('click', checkSolution);
+        document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+        // Fungsi untuk keluar dari game
+        function closeGame() {
+            if (confirm('Yakin ingin keluar dari game?')) {
+                window.close();
+                // Jika window.close() tidak berfungsi (browser security), redirect atau hide
+                if (!window.closed) {
+                    document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-size:2em;color:#666;">Game ditutup. Terima kasih telah bermain! 🏴‍☠️</div>';
+                }
+            }
+        }
+
+        // Inisialisasi game saat halaman dimuat
+        initGame();
+    </script>
+</body>
+</html>
